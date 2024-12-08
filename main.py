@@ -14,9 +14,28 @@ class Window(QWidget):
         self.pushButton_2.clicked.connect(self.exit)
         self.tableWidget.itemChanged.connect(self.item_changed)
         self.pushButton_3.clicked.connect(self.save_results)
+        self.pushButton.clicked.connect(self.adding_record)
 
     def item_changed(self, item):
         self.modified[self.titles[item.column()]] = item.text()
+
+    def adding_record(self):
+        self.con = sqlite3.connect('coffee.sqlite')
+        cur = self.con.cursor()
+
+        name = self.lineEdit.text()
+        roast_degree = self.lineEdit_2.text()
+        grind_type = self.lineEdit_3.text()
+        flavor_description = self.lineEdit_4.text()
+        price = float(self.lineEdit_5.text())
+        package_volume = self.lineEdit_6.text()
+        cur.execute(
+            'INSERT INTO coffee (name, roast_degree, grind_type, flavor_description, price, package_volume) VALUES (?,?,?,?,?,?)',
+            (name, roast_degree, grind_type, flavor_description, price, package_volume)
+        )
+        self.con.commit()
+        self.con.close()
+        self.update_result()
 
     def save_results(self):
         if self.modified:
@@ -37,6 +56,7 @@ class Window(QWidget):
             self.con.commit()
             self.modified.clear()
             QMessageBox.information(self, "Успех", "Запись успешно обновлена!")
+            self.con.close()
 
     def exit(self):
         self.close()
@@ -58,6 +78,7 @@ class Window(QWidget):
             for j, val in enumerate(elem):
                 self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
         self.modified = {}
+        self.con.close()
 
 
 class CoffeeApp(QtWidgets.QMainWindow):
